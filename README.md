@@ -99,12 +99,10 @@ new AnnotationConfigApplicationContext(AppConfig.class);
 
 → 의존관계에 프록시 주입 (joinPoint.proceed())
 
--AOP 적용 전 의존관계 (예시)
-
+-AOP 적용 전 의존관계 (예시)   
 memberController → memberService
 
--AOP 적용 후 의존관계 (예시)
-
+-AOP 적용 후 의존관계 (예시)   
 memberController → (프록시) memberService → (실제) memberService
 
 ```java
@@ -223,12 +221,12 @@ JDBC 리포지토리 → JPA 리포지토리 로 변경하는 경우에도, Tran
     ```java
         public class ExampleBean {
         
-        	@PostConstruct    
+        	@PostConstruct
         	public void initialize() throws Exception {
-        		// 초기화 콜백 (의존관계 주입이 끝나면 호출)    
-        	}     
+        		// 초기화 콜백 (의존관계 주입이 끝나면 호출)
+        	}
         	
-        	@PreDestroy    
+        	@PreDestroy
         	public void close() throws Exception {
         		// 소멸 전 콜백 (메모리 반납, 연결 종료와 같은 과정)
         	}
@@ -256,8 +254,7 @@ JDBC 리포지토리 → JPA 리포지토리 로 변경하는 경우에도, Tran
 
 코드 사이에 특별한 의미, 기능을 수행하도록 하는 기술
 
-→ Java 코드에 어노테이션을 추가하여, 스프링 프레임워크가 코드의 의미와 기능을 파악하고 처리하도록 한다
-
+→ Java 코드에 어노테이션을 추가하여, 스프링 프레임워크가 코드의 의미와 기능을 파악하고 처리하도록 한다   
 → 컴포넌트 스캔, 의존성 주입, RESTful API 구축 등 다양한 기능을 구현할 수 있다
 
 ✓ Annotation 종류
@@ -302,8 +299,7 @@ JDBC 리포지토리 → JPA 리포지토리 로 변경하는 경우에도, Tran
 -> WAS가 Response 객체 -> HTTP 응답 정보 생성
 ```
 
-→ 자바 웹 애플리케이션의 기본 실행 단위
-
+→ 자바 웹 애플리케이션의 기본 실행 단위   
 → 서블릿 컨테이너 (ex. 톰캣) 위에서 실행된다
 
 ✓ 서블릿 등록(예시)
@@ -315,7 +311,7 @@ public class HelloServlet extends HttpServlet {
 	// HTTP 요청을 통해 매핑된 URL이 호출되면 서블릿 컨테이너는 다음 메서드를 실행한다	
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse
-	response) { throws ServletException, IOException {
+	response) throws ServletException, IOException {
 			System.out.println("HelloServlet.service");
 			System.out.println("request = " + request);
 			System.out.println("response = " + response);
@@ -327,16 +323,11 @@ public class HelloServlet extends HttpServlet {
 			response.setCharacterEncoding("utf-8");
 			response.getWriter().write("hello " + username);
 		}
-	}	
-	
 }
 ```
-
-→ 웹 브라우저 실행
-
-[http://localhost:8080/hello?username](http://localhost:8080/hello?username)=spring
-
-결과: hello spring
+→ 웹 브라우저 실행    
+    http://localhost:8080/hello?username=spring    
+    결과: hello spring
 
 ### Tomcat(톰캣)
 
@@ -348,10 +339,8 @@ public class HelloServlet extends HttpServlet {
 
 ### WAS(Web Application Server / 웹 애플리케이션 서버)
 
-HTTP 기반으로 동작하며, 애플리케이션 로직을 수행한다
-
-→ 동적 HTML, HTTP API(JSON)
-
+HTTP 기반으로 동작하며, 애플리케이션 로직을 수행한다    
+→ 동적 HTML, HTTP API(JSON)    
 → 서블릿, JSP, 스프링 MVC
 
 ### Dispatcher Servlet 동작 흐름
@@ -367,8 +356,7 @@ Spring MVC의 프런트 컨트롤러 서블릿
 
 ✓ doDispatch()
 
-DispatcherServlet의 메서드
-
+DispatcherServlet의 메서드   
 스프링 MVC의 전체 요청 처리 흐름을 담당한다
 
 ```java
@@ -390,4 +378,36 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
     // 6. 인터셉터 afterCompletion 실행
 }
 
-```
+```    
+
+
+
+## 새롭게 알게 된 점 / 느낀 점   
+
+- 스프링 부트 내장 톰켓 서버를 단순히 웹 애플리케이션 서버를 열 수 있는 '웹 서버'라고 알고 있었는데, 
+'서블릿 컨테이너'를 포함하여, WAS로 웹 요청 및 응답을 처리할 수 있다는 것을 알게 됨
+- 스프링 튜토리얼 진행 중, Test할 때 MockMvc 객체를 사용하면 실제 톰캣(WAS)를 구동하지 않고도, 
+DispatcherServlet 내부 동작(요청 매핑 -> 컨트롤러 호출 -> 응답 생성)을 가짜 서블릿 환경에서 실행시켜 줄 수 있다는 것을 알게 됨
+
+```java
+@Autowired    
+private MockMvc mvc;    
+@Test    
+public void getHello() throws Exception {    
+    mvc.perform(MockMvcRequestBuilders.get("/").accept(MediaType.APPLICATION_JSON))    
+            .andExpect(status().isOk())    
+            .andExpect(content().string(equalTo("Greetings from Spring Boot!"))); 
+}
+
+```   
+1. MockMvcRequestBuilders.get("/")    
+→ “/ 경로로 GET 요청이 들어왔다”는 가짜 요청(MockHttpServletRequest) 생성
+
+2. mvc.perform(...)    
+→ DispatcherServlet이 해당 요청을 받아 컨트롤러(HelloController) 실행
+
+3. .andExpect(status().isOk())    
+→ 반환된 가짜 응답(MockHttpServletResponse) 의 상태 코드가 200인지 검증
+
+4. .andExpect(content().string(equalTo("Greetings from Spring Boot!")))    
+→ 응답 바디가 기대한 문자열과 같은지 검증
